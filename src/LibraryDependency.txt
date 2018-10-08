@@ -1,0 +1,28 @@
+os
+sys
+random
+math
+numpy
+cv2
+matplotlib
+tensorflow
+json
+pydicom
+imgaug
+tqdm
+pandas
+glob
+mrcnn
+
+This is our Library list.
+you should install these libraries before run.
+
+How to Install :
+python -m pip install (LibraryName)
+
+ex) python -m pip install pandas, mrcnn, tqdm
+
+CV2 install Problem :
+
+python -m pip install cv2 doesn't work.
+python -m pip install opencv-python <- this is correct command.
