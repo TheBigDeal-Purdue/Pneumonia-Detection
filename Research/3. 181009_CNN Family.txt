@@ -1,0 +1,91 @@
+RCNN부터 Mask-RCNN까지
+ - https://tensorflow.blog/2017/06/05/from-r-cnn-to-mask-r-cnn/
+
+
+1. Computer Vision
+ (1) Object Detection
+  - 여러 Object가 있을 수 있는데, 그 모든 것의 위치와 classification(분류)까지 해야 한다.
+
+ (2) R-CNN의 역사
+  - R-CNN -> Fast-RCNN -> Faster-RCNN -> Mask-RCNN
+
+ (3) 성능 비교
+  - 성능 측면으로 비교해 보면, Faster-RCNN은 R-FCN, SSD보다 가장 좋다. 속도는 R-FCN이나 SSD보다 느릴 수 있으나,
+정확성은 그 중 가장 좋다.
+
+
+2. R-CNN
+ (1) R-CNN이란?
+  - R-CNN은 Regions with CNN features라는 뜻이다.
+
+ (2) R-CNN 방법
+  - 이미지에서 여러 바운딩 박스(ROI)를 뽑아 내서, 그 하나 하나의 이미지를 SVMs를 통해 학습시키는 CNN으로 이용한다.
+  - 바운딩 박스를 뽑아내는 방법 : 이미지 속의 근접한 픽셀들을 그룹화 하여 머지하여 바운딩 박스로 만든다.(셀렉티브 서치 알고리즘)
+
+ (3) R-CNN의 학습 방법
+  1) AlexNet을 Pre-train 시킨다.
+  2) object detection을 위한 클래스 수 만큼 조율한다.
+  3) SVM과 bounding-box regressors를 이용하여 학습 시킨다.
+
+ (4) Bounding-Box Regression
+  - P : 처음에 뽑아낸 바운딩 박스(ROI)의 좌표
+    P를 적당히 변환 해서 G(Ground tools)와 가까워지도록 찾는게 Bounding-Box Regression이다.
+
+ (5) R-CNN의 단점
+  - 느리다.
+  - SVM이나 바운딩 박스를 한 결과를 CNN에 업데이트 하지 못한다.
+  - Fine Tuning, SVM, bounding box의 과정으로 복잡한 과정이기 때문에 느리다.
+
+
+3. Fast R-CNN
+ (1) Fast R-CNN의 장점
+  - Fast R-CNN은 R-CNN의 단점들을 해결 했다.
+  - end to end, single stage 학습을 한다.
+
+ (2) Fast R-CNN의 방법
+  - 이미지에서 ROI(바운딩 박스)를 '하나' 뽑은 다음에, CNN에 이 ROI를 전체 한 번에 집어 넣는다. 이 상태로 맨 마지막 Conv feature map까지 간다.
+    RoI pooling - Full reconect layer를 계속 거쳐서 클래시피케이션(이미지를 찾아내고), 바운딩 박스에 대한 regression을 한다.
+  - Fast R-CNN의 핵심은 RoI pooling이다.
+    RoI pooling : feature map이 있다고 하면, max pooling을 한 결과 값이 항상 7x7이 되도록 그 feature map을 줄여줘야 한다.
+    feature map이 21x14라면 3x2의 stride로 max pooling 하여 7x7의 output을 만든다.
+
+ (3) Fast R-CNN의 학습 방법
+  1) input에서 bounding box를 받는다.
+  2) bounding box를 이용하여 convolution feature map을 generate 한다.
+  3) 뽑혀온 여러 개의 바운딩 박스를 RoI pooling을 하여 fixed-length feature vector를 뽑는다.
+  4) 앞의 결과를 full reconect layer에 넣고 classification과 bounding box regression을 동시에 한다.
+
+ (4) R-CNN과 SPP-net과 Fast R-CNN 비교
+  - Training Time은 R-CNN > SPP-net > Fast R-CNN의 순서로 많이 걸린다.
+  - Test Time은 R-CNN > SPP-net > Fast R-CNN의 순서로 많이 걸린다.
+
+ (5) Fast R-CNN의 단점
+  - region proposal이 test-time의 bottleneck을 걸게 한다.
+  - 정말 fast 하지는 않다.
+
+
+4. Faster R-CNN(RPN + Fast R-CNN)
+ (1) Faster R-CNN이란?
+  - Region Proposal Network(RPN)을 네트워크 안에서 같이하게 했다.
+    Fast R-CNN에서 RPN만 추가된 것이다.
+  - RPN : 최상위에 있는 convolutional feature map에서 convolution filter를 더 쓴다.
+    convolution filter를 3x3짜리를 256개를 더 쓰는데,
+    따라서 최상위에 있던 convolutuonal feature map인 7x7과 256이 곱해져 7x7x256짜리 feature map이 나온다.
+    여기서 이 결과에 1x1 conv을 써서 classification 한 번, 또 1x1 conv을 써서 bounding box regression을 한 번 한다.
+    bounding box regression으로 뽑아낸 바운딩 박스에서 classification으로 '물체가 있는지'를 판단하게 된다.
+
+ (2) Faster R-CNN의 학습 방법
+  1) RPN으로 학습 시킨다. image net으로 pre train 네트워크를 RPN으로 학습 시킨다.
+  2) 학습된 네트워크를 이용해서 RoI를 이니셜로 뽑는다.
+  3) image net으로 pre train된 네트워크를 RoI를 이용해서 Fast R-CNN으로 학습을 시킨다.
+  4) 앞의 결과로 RPN으로 다시 학습을 시킨다.
+  5) 앞의 결과에서 새로운 Region Proposal을 뽑고, Fast R-CNN을 이용해서 결과를 만든다.
+
+ (3) R-CNN과 Fast R-CNN과 Faster R-CNN 비교
+  - Test Time은 R-CNN > Fast R-CNN > Faster R-CNN 순서로 많이 걸린다.
+  - speed는 Faster R-CNN > Fast R-CNN > R-CNN의 순서이다.
+  - 결과의 정확도도 Faster R-CNN > Fast R-CNN > R-CNN의 순서이다.
+
+ (4) Faster R-CNN의 단점
+  - 7의 배수가 아닌 RoI가 뽑혀져 나오면 어쩔 수 없이 값을 버리면서 라운딩을 하는데, 오차가 생길 수 있다.
+  - 이러한 Faster R-CNN의 단점을 개선하면서 나온 것이 Mask-RCNN이다.
